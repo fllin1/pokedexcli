@@ -1,84 +1,40 @@
 package main
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
-	"log"
 )
 
-type LocationArea struct {
-	Count 		int `json:"count"`
-	Next  		*string `json:"next"`
-	Previous 	*string `json:"previous"`
-	Results 	[]struct {
-		Name 		string `json:"name"`
-		URL  		string `json:"url"`
-	} `json:"results"`
-}
-
-
-func commandMap() error {
-	var url string
-		fmt.Println()
-	if mapConfig.Next == nil {
-		url = "https://pokeapi.co/api/v2/location-area/"
-		fmt.Println("Fetching first page of location areas...")
-	} else {
-		url = *mapConfig.Next
-		fmt.Println("Fetching next page of location areas...")
-	}
-
-	body, err := getPokedexAPI(url)
+func commandMapf(cfg *config) error {
+	locationsResp, err := cfg.pokeapiClient.ListLocations(cfg.nextLocationsURL)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	var locationArea LocationArea
-	err = json.Unmarshal(body, &locationArea)
-	if err != nil {
-		log.Fatal(err)
-	}
+	cfg.nextLocationsURL = locationsResp.Next
+	cfg.prevLocationsURL = locationsResp.Previous
 
-	// Update next and previous in command config
-	mapConfig.Next = locationArea.Next
-	mapConfig.Previous = locationArea.Previous
-	
-	printLocationAreas(locationArea)
+	for _, loc := range locationsResp.Results {
+		fmt.Println(loc.Name)
+	}
 	return nil
 }
 
-
-func commandMapB() error {
-	var url string
-	if mapConfig.Previous == nil {
-		fmt.Println("No previous page available.")
-		return nil
-	} else {
-		fmt.Println("Fetching previous page of location areas...")
-		url = *mapConfig.Previous
-	}
-	body, err := getPokedexAPI(url)
-	if err != nil {
-		log.Fatal(err)
+func commandMapb(cfg *config) error {
+	if cfg.prevLocationsURL == nil {
+		return errors.New("you're on the first page")
 	}
 
-	var locationArea LocationArea
-	err = json.Unmarshal(body, &locationArea)
+	locationResp, err := cfg.pokeapiClient.ListLocations(cfg.prevLocationsURL)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	
-	// Update next and previous in command config
-	mapConfig.Next = locationArea.Next
-	mapConfig.Previous = locationArea.Previous
-	
-	printLocationAreas(locationArea)
+
+	cfg.nextLocationsURL = locationResp.Next
+	cfg.prevLocationsURL = locationResp.Previous
+
+	for _, loc := range locationResp.Results {
+		fmt.Println(loc.Name)
+	}
 	return nil
-}
-
-func printLocationAreas(locationArea LocationArea) {
-	for _, area := range locationArea.Results {
-		fmt.Printf("- %s\n", area.Name)
-	}
-	fmt.Println()
 }
