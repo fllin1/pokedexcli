@@ -11,7 +11,6 @@ type RespShallowLocations struct {
 	} `json:"results"`
 }
 
-
 // RespLocationArea -
 type RespLocationArea struct {
 	EncounterMethodRates []struct {
@@ -66,4 +65,4 @@ type PokemonEncounters []struct {
 			URL  string `json:"url"`
 		} `json:"version"`
 	} `json:"version_details"`
-} 
+}

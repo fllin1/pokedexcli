@@ -6,12 +6,8 @@ import (
 	"net/http"
 )
 
-
-func (c *Client) ExploreLocation(pageURL *string, areaName string) (PokemonEncounters, error) {
+func (c *Client) LocationGet(areaName string) (PokemonEncounters, error) {
 	url := baseURL + "/location-area/" + areaName + "/"
-	if pageURL != nil {
-		url = *pageURL
-	}
 
 	if dat, ok := c.cache.Get(url); ok {
 		locationAreaResp := RespLocationArea{}
